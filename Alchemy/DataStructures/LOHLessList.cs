@@ -1,12 +1,13 @@
 ﻿using System;
 using System.Buffers;
+using System.Collections;
 using System.Collections.Generic;
-using System.Threading;
 
 namespace DataStructures
 {
-    public class LOHLessList<T> : IDisposable
+    public class LOHLessList<T> : IEnumerable<T>, IDisposable
     {
+        private int _version;
         private bool _disposed;
         private int _slotNum;
 
@@ -28,10 +29,13 @@ namespace DataStructures
             if (local.Items.Length == local.Index) _slotNum++;
 
             Count++;
+            _version++;
         }
 
         public bool Remove(T item)
         {
+            if (_disposed) throw new ObjectDisposedException(nameof(LOHLessList<T>));
+
             for (var i = 0; i < temp.Length; i++)
             {
                 Slot slot = temp[i];
@@ -47,6 +51,9 @@ namespace DataStructures
                 };
                 temp[i] = slot;
 
+                Count--;
+                _version++;
+
                 return true;
             }
 
@@ -61,6 +68,33 @@ namespace DataStructures
                 }
                 return -1;
             }
+        }
+
+        public IEnumerator<T> GetEnumerator()
+        {
+            if (_disposed) throw new ObjectDisposedException(nameof(LOHLessList<T>));
+            if (Count == 0) yield break;
+
+            int version = _version;
+
+            for (var i = 0; i < temp.Length; i++)
+            {
+                Slot slot = temp[i];
+                if (slot.Items == null) continue;
+
+                foreach (ValueContainer<T> valueContainer in slot.Items)
+                {
+                    if (version != _version) throw new InvalidOperationException();
+
+                    if (valueContainer.Removed) continue;
+                    yield return valueContainer.Value;
+                }
+            }
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
         }
 
         public void Dispose()
@@ -79,8 +113,6 @@ namespace DataStructures
 
             temp = null;
         }
-
-
 
         private struct ValueContainer<TValue>
         {
