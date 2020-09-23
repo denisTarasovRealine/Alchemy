@@ -36,9 +36,11 @@ namespace DataStructures
             {
                 _slotNum++;
             }
+
+            Count++;
         }
 
-
+        public int Count { get; private set; }
 
         public void Dispose()
         {
