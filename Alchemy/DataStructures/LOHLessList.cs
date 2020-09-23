@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Buffers;
-using System.Collections.Generic;
-using System.Text;
 
 namespace DataStructures
 {
@@ -12,43 +10,31 @@ namespace DataStructures
 
         private Slot[] temp = new Slot[17];
 
-        struct Slot
-        {
-            public int Index;
-            public T[] Items;
-        }
-
+        public int Count { get; private set; }
+        
         public void Add(T item)
         {
             if (_disposed) throw new ObjectDisposedException(nameof(LOHLessList<T>));
 
-            Slot local = temp[_slotNum];
+            var local = temp[_slotNum];
 
-            if (local.Items == null)
-            {
-                local.Items = ArrayPool<T>.Shared.Rent(16 << _slotNum);
-            }
+            if (local.Items == null) local.Items = ArrayPool<T>.Shared.Rent(16 << _slotNum);
 
             local.Items[local.Index++] = item;
             temp[_slotNum] = local;
 
-            if (local.Items.Length == local.Index)
-            {
-                _slotNum++;
-            }
+            if (local.Items.Length == local.Index) _slotNum++;
 
             Count++;
         }
-
-        public int Count { get; private set; }
 
         public void Dispose()
         {
             _disposed = true;
 
-            for (int i = 0; i < temp.Length; i++)
+            for (var i = 0; i < temp.Length; i++)
             {
-                Slot slot = temp[i];
+                var slot = temp[i];
                 if (slot.Items == null) continue;
 
                 ArrayPool<T>.Shared.Return(slot.Items, true);
@@ -57,6 +43,12 @@ namespace DataStructures
             }
 
             temp = null;
+        }
+
+        private struct Slot
+        {
+            public int Index;
+            public T[] Items;
         }
     }
 }
