@@ -42,8 +42,10 @@ namespace DataStructures
 
                 ArrayPool<ValueContainer<T>>.Shared.Return(slot.Items, true);
                 slot.Items = null;
+                slot.Index = 0;
                 temp[i] = slot;
             }
+            Count = 0;
         }
 
         public bool Contains(T item)
