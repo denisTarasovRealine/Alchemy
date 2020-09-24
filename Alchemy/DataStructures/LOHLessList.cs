@@ -5,7 +5,7 @@ using System.Collections.Generic;
 
 namespace DataStructures
 {
-    public class LOHLessList<T> : IEnumerable<T>, IDisposable
+    public class LOHLessCollection<T> : ICollection<T>, IDisposable
     {
         private int _version;
         private bool _disposed;
@@ -14,10 +14,11 @@ namespace DataStructures
         private Slot[] temp = new Slot[17];
 
         public int Count { get; private set; }
+        public bool IsReadOnly => false;
 
         public void Add(T item)
         {
-            if (_disposed) throw new ObjectDisposedException(nameof(LOHLessList<T>));
+            if (_disposed) throw new ObjectDisposedException(nameof(LOHLessCollection<T>));
 
             var local = temp[_slotNum];
 
@@ -32,9 +33,33 @@ namespace DataStructures
             _version++;
         }
 
+        public void Clear()
+        {
+            for (var i = 0; i < temp.Length; i++)
+            {
+                Slot slot = temp[i];
+                if (slot.Items == null) continue;
+
+                ArrayPool<ValueContainer<T>>.Shared.Return(slot.Items, true);
+                slot.Items = null;
+                temp[i] = slot;
+            }
+        }
+
+        public bool Contains(T item)
+        {
+            // TODO think about a bloom filter
+            throw new NotImplementedException();
+        }
+
+        public void CopyTo(T[] array, int arrayIndex)
+        {
+            throw new NotImplementedException();
+        }
+
         public bool Remove(T item)
         {
-            if (_disposed) throw new ObjectDisposedException(nameof(LOHLessList<T>));
+            if (_disposed) throw new ObjectDisposedException(nameof(LOHLessCollection<T>));
 
             for (var i = 0; i < temp.Length; i++)
             {
@@ -72,7 +97,7 @@ namespace DataStructures
 
         public IEnumerator<T> GetEnumerator()
         {
-            if (_disposed) throw new ObjectDisposedException(nameof(LOHLessList<T>));
+            if (_disposed) throw new ObjectDisposedException(nameof(LOHLessCollection<T>));
             if (Count == 0) yield break;
 
             int version = _version;
@@ -101,15 +126,7 @@ namespace DataStructures
         {
             _disposed = true;
 
-            for (var i = 0; i < temp.Length; i++)
-            {
-                Slot slot = temp[i];
-                if (slot.Items == null) continue;
-
-                ArrayPool<ValueContainer<T>>.Shared.Return(slot.Items, true);
-                slot.Items = null;
-                temp[i] = slot;
-            }
+            Clear();
 
             temp = null;
         }
