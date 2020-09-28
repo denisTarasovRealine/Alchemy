@@ -2,6 +2,8 @@
 using System.Buffers;
 using System.Collections;
 using System.Collections.Generic;
+using DataStructures.Properties;
+
 
 namespace DataStructures
 {
@@ -11,6 +13,8 @@ namespace DataStructures
         private bool _disposed;
         private int _slotNum;
 
+        // todo capacity
+        // todo rename
         private Slot[] temp = new Slot[17];
 
         public int Count { get; private set; }
@@ -31,32 +35,6 @@ namespace DataStructures
 
             Count++;
             _version++;
-        }
-
-        public void Clear()
-        {
-            for (var i = 0; i < temp.Length; i++)
-            {
-                Slot slot = temp[i];
-                if (slot.Items == null) continue;
-
-                ArrayPool<ValueContainer<T>>.Shared.Return(slot.Items, true);
-                slot.Items = null;
-                slot.Index = 0;
-                temp[i] = slot;
-            }
-            Count = 0;
-        }
-
-        public bool Contains(T item)
-        {
-            // TODO think about a bloom filter
-            throw new NotImplementedException();
-        }
-
-        public void CopyTo(T[] array, int arrayIndex)
-        {
-            throw new NotImplementedException();
         }
 
         public bool Remove(T item)
@@ -97,6 +75,37 @@ namespace DataStructures
             }
         }
 
+        public void Clear()
+        {
+            for (var i = 0; i < temp.Length; i++)
+            {
+                Slot slot = temp[i];
+                if (slot.Items == null) continue;
+
+                ArrayPool<ValueContainer<T>>.Shared.Return(slot.Items, true);
+                slot.Items = null;
+                slot.Index = 0;
+                temp[i] = slot;
+            }
+            Count = 0;
+        }
+
+        public bool Contains(T item)
+        {
+            // TODO think about a bloom filter
+            throw new NotImplementedException();
+        }
+
+        public void CopyTo(T[] array, int arrayIndex)
+        {
+            if (_disposed) throw new ObjectDisposedException(nameof(LOHLessCollection<T>));
+
+            foreach (T item in this)
+            {
+                array[arrayIndex++] = item;
+            }
+        }
+
         public IEnumerator<T> GetEnumerator()
         {
             if (_disposed) throw new ObjectDisposedException(nameof(LOHLessCollection<T>));
@@ -111,7 +120,7 @@ namespace DataStructures
 
                 foreach (ValueContainer<T> valueContainer in slot.Items)
                 {
-                    if (version != _version) throw new InvalidOperationException();
+                    if (version != _version) throw new InvalidOperationException(Resources.InvalidOperation_EnumFailedVersion);
 
                     if (valueContainer.Removed) continue;
                     yield return valueContainer.Value;

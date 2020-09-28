@@ -11,14 +11,51 @@ namespace DataStructures.Tests
         public void Return48_OnAdd48Items()
         {
             using var lohLessList = new LOHLessCollection<int>();
-            foreach (int i in Enumerable.Range(1,48))
+            foreach (int i in Enumerable.Range(1, 48))
             {
                 lohLessList.Add(i);
             }
 
             Assert.AreEqual(48, lohLessList.Count);
         }
+        
+        [TestMethod]
+        public void CopiedArray_OnCopyToWithZeroOffset()
+        {
+            using var lohLessList = new LOHLessCollection<int>();
+            foreach (int i in Enumerable.Range(1, 48))
+            {
+                lohLessList.Add(i);
+            }
 
+            int[] destinationArray = new int[48];
+            lohLessList.CopyTo(destinationArray, 0);
+
+            Assert.AreEqual(48, destinationArray[47]);
+        }
+
+        [TestMethod]
+        public void CopiedArray_OnCopyToWithNoneZeroOffset()
+        {
+            var temp = new List<int>(48);
+            using var lohLessList = new LOHLessCollection<int>();
+            foreach (int i in Enumerable.Range(1, 48))
+            {
+                lohLessList.Add(i);
+                temp.Add(i);
+            }
+
+            int[] destinationArray1 = new int[58];
+            temp.CopyTo(destinationArray1, 10);
+
+            int[] destinationArray2 = new int[58];
+            lohLessList.CopyTo(destinationArray2, 10);
+
+            for (int i = 0; i < 58; i++)
+            {
+                Assert.AreEqual(destinationArray1[i], destinationArray2[i]);
+            }
+        }
 
         [TestMethod]
         public void EmptyCollection_OnClear()
@@ -42,30 +79,28 @@ namespace DataStructures.Tests
         }
 
         [TestMethod]
-        public void Return8_OnRemove()
+        public void Return47_OnRemoveOneItem()
         {
-            
-
-            var t = 2 << 1;
-            var t2 = 4 >> 1;
-
             using var lohLessList = new LOHLessCollection<int>();
             foreach (int i in Enumerable.Range(1, 48))
             {
                 lohLessList.Add(i);
             }
 
-            Assert.IsTrue(lohLessList.Remove(42));
+            var isRemoved = lohLessList.Remove(4);
+            Assert.IsTrue(isRemoved);
+            Assert.AreEqual(47, lohLessList.Count);
 
-            foreach (var i in lohLessList)
-            {
-                
-            }
+            isRemoved = lohLessList.Remove(4);
+            Assert.IsFalse(isRemoved);
+            Assert.AreEqual(47, lohLessList.Count);
 
-            //List<int> s;
-            //s.Remove()
+            lohLessList.Add(4);
+            Assert.AreEqual(48, lohLessList.Count);
 
-            //Assert.AreEqual(48, lohLessList.Count);
+            isRemoved = lohLessList.Remove(4);
+            Assert.IsTrue(isRemoved);
+            Assert.AreEqual(47, lohLessList.Count);
         }
     }
 }
