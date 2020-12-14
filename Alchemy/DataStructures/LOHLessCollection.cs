@@ -113,6 +113,7 @@ namespace DataStructures
 
             int version = _version;
 
+            int count = 0;
             for (var i = 0; i < temp.Length; i++)
             {
                 Slot slot = temp[i];
@@ -120,10 +121,11 @@ namespace DataStructures
 
                 foreach (ValueContainer<T> valueContainer in slot.Items)
                 {
-                    if (version != _version) throw new InvalidOperationException(Resources.InvalidOperation_EnumFailedVersion);
+                    if (version != _version) throw new InvalidOperationException("Collection was modified; enumeration operation may not execute.<");
 
                     if (valueContainer.Removed) continue;
                     yield return valueContainer.Value;
+                    if(++count == Count) yield break;
                 }
             }
         }
