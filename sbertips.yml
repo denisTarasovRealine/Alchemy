@@ -1,0 +1,100 @@
+openapi: 3.0.1
+info:
+  title: Tips API
+  version: v1
+  
+servers:
+  - url: '{protocol}://plazius.ru/api/tips/v1'
+    variables:
+      protocol:
+        enum:
+          - http
+          - https
+        default: https
+
+paths:
+  /dctips/pay:
+    post:
+      tags:
+        - DcPay
+      summary: Быстрая оплата для DC без получения профиля официанта
+      requestBody:
+        description: ''
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PayDcTipsRequestModel'
+          text/json:
+            schema:
+              $ref: '#/components/schemas/PayDcTipsRequestModel'
+          application/*+json:
+            schema:
+              $ref: '#/components/schemas/PayDcTipsRequestModel'
+      responses:
+        '200':
+          description: Success
+          content:
+            text/plain:
+              schema:
+                $ref: '#/components/schemas/TipsPayResponse'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TipsPayResponse'
+            text/json:
+              schema:
+                $ref: '#/components/schemas/TipsPayResponse'
+components:
+  schemas:
+    PayDcTipsRequestModel:
+      type: object
+      properties:
+        userId:
+          type: string
+          nullable: true
+        organizationId:
+          type: string
+          format: uuid
+        orderId:
+          type: string
+          format: uuid
+        code:
+          $ref: '#/components/schemas/PaymentType'
+        sum:
+          type: integer
+          format: int64
+        encryptedData:
+          type: string
+          nullable: true
+        comment:
+          type: string
+          nullable: true
+      additionalProperties: false
+    PaymentType:
+      enum:
+        - 0
+        - 1
+        - 2
+      type: integer
+      format: int32
+    ExecutionState:
+      enum:
+        - 0
+        - 1
+        - 2
+      type: integer
+      format: int32
+    TipsPayResponse:
+      type: object
+      properties:
+        state:
+          $ref: '#/components/schemas/ExecutionState'
+        localizedErrorMessage:
+          type: string
+          nullable: true
+        authUrl:
+          type: string
+          nullable: true
+        paymentObjectUid:
+          type: string
+          format: uuid
+      additionalProperties: false
