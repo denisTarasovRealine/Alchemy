@@ -2,18 +2,10 @@ openapi: 3.0.1
 info:
   title: Tips API
   version: v1
-  
-servers:
-  - url: '{protocol}://plazius.ru/api/tips/v1'
-    variables:
-      protocol:
-        enum:
-          - http
-          - https
-        default: https
 
 paths:
-  /dctips/pay:
+  
+  /api/tips/v1/dctips/pay:
     post:
       tags:
         - DcPay
@@ -43,13 +35,77 @@ paths:
             text/json:
               schema:
                 $ref: '#/components/schemas/TipsPayResponse'
+  
+  /api/tips/v1/pay/completeMmr:
+    get:
+      tags:
+        - Pay
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+            nullable: true
+        - name: issuer_id
+          in: query
+          schema:
+            type: string
+            format: uuid
+        - name: payment_info
+          in: query
+          schema:
+            type: string
+            nullable: true
+      responses:
+        '200':
+          description: Success
+
+  /api/tips/v1/pay/profile/dcintegration:
+    post:
+      tags:
+        - PayProfile
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PayDcTipsProfileRequestModel'
+          text/json:
+            schema:
+              $ref: '#/components/schemas/PayDcTipsProfileRequestModel'
+          application/*+json:
+            schema:
+              $ref: '#/components/schemas/PayDcTipsProfileRequestModel'
+      responses:
+        '200':
+          description: Success
+          content:
+            text/plain:
+              schema:
+                $ref: '#/components/schemas/PayStartData'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PayStartData'
+            text/json:
+              schema:
+                $ref: '#/components/schemas/PayStartData'
+
 components:
   schemas:
+    
+    PaymentType:
+      enum:
+        - 0
+        - 1
+        - 2
+      type: integer
+      format: int32
+    
     PayDcTipsRequestModel:
       type: object
       properties:
         userId:
-          type: string
+          type: integer
+          format: int64
           nullable: true
         organizationId:
           type: string
@@ -69,13 +125,53 @@ components:
           type: string
           nullable: true
       additionalProperties: false
-    PaymentType:
-      enum:
-        - 0
-        - 1
-        - 2
-      type: integer
-      format: int32
+    
+    PayDcTipsProfileRequestModel:
+      type: object
+      properties:
+        userId:
+          type: string
+          format: uuid
+        organizationId:
+          type: string
+          format: uuid
+        orderId:
+          type: string
+          format: uuid
+      additionalProperties: false
+    
+    PayStartData:
+      type: object
+      properties:
+        objectCode:
+          type: string
+          nullable: true
+        name:
+          type: string
+          nullable: true
+        position:
+          type: string
+          nullable: true
+        status:
+          type: string
+          nullable: true
+        photoUrl:
+          type: string
+          nullable: true
+        paymentSystem:
+          type: string
+          nullable: true
+        cardType:
+          type: string
+          nullable: true
+        sumVariants:
+          type: array
+          items:
+            type: integer
+            format: int32
+          nullable: true
+      additionalProperties: false
+
     ExecutionState:
       enum:
         - 0
@@ -83,6 +179,7 @@ components:
         - 2
       type: integer
       format: int32
+
     TipsPayResponse:
       type: object
       properties:
@@ -98,3 +195,24 @@ components:
           type: string
           format: uuid
       additionalProperties: false
+
+    Phone:
+      type: object
+      additionalProperties: false
+
+    QrPrechequeIntegrationRequest:
+      type: object
+      properties:
+        systemType:
+          type: integer
+          format: int32
+        contact:
+          type: string
+          nullable: true
+        phone:
+          $ref: '#/components/schemas/Phone'
+        email:
+          type: string
+          nullable: true
+      additionalProperties: false
+      
