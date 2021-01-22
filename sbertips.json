@@ -2,26 +2,29 @@ openapi: 3.0.1
 info:
   title: Tips API
   version: v1
-
 paths:
-  
-  /api/tips/v1/dctips/pay:
+  /api/tips/v1/pay/start:
     post:
       tags:
-        - DcPay
-      summary: Быстрая оплата для DC без получения профиля официанта
+        - Pay
+      parameters:
+        - name: ClientId
+          in: header
+          schema:
+            type: string
+            format: uuid
+            nullable: true
       requestBody:
-        description: ''
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/PayDcTipsRequestModel'
+              $ref: '#/components/schemas/PayTipRequestByCodeModel'
           text/json:
             schema:
-              $ref: '#/components/schemas/PayDcTipsRequestModel'
+              $ref: '#/components/schemas/PayTipRequestByCodeModel'
           application/*+json:
             schema:
-              $ref: '#/components/schemas/PayDcTipsRequestModel'
+              $ref: '#/components/schemas/PayTipRequestByCodeModel'
       responses:
         '200':
           description: Success
@@ -35,7 +38,73 @@ paths:
             text/json:
               schema:
                 $ref: '#/components/schemas/TipsPayResponse'
-  
+  /api/tips/v1/pay/info:
+    get:
+      tags:
+        - Pay
+      parameters:
+        - name: paymentObjectId
+          in: query
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Success
+          content:
+            text/plain:
+              schema:
+                $ref: '#/components/schemas/WaiterPaymentOperationInfo'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WaiterPaymentOperationInfo'
+            text/json:
+              schema:
+                $ref: '#/components/schemas/WaiterPaymentOperationInfo'
+  /api/tips/v1/pay/complete:
+    get:
+      tags:
+        - Pay
+      parameters:
+        - name: paymentObjectId
+          in: query
+          schema:
+            type: string
+            format: uuid
+        - name: code
+          in: query
+          schema:
+            type: string
+            nullable: true
+        - name: success
+          in: query
+          schema:
+            type: boolean
+      responses:
+        '200':
+          description: Success
+  /api/tips/v1/pay/completeSber:
+    get:
+      tags:
+        - Pay
+      parameters:
+        - name: paymentObjectId
+          in: query
+          schema:
+            type: string
+            format: uuid
+        - name: code
+          in: query
+          schema:
+            type: string
+            nullable: true
+        - name: success
+          in: query
+          schema:
+            type: boolean
+      responses:
+        '200':
+          description: Success
   /api/tips/v1/pay/completeMmr:
     get:
       tags:
@@ -59,22 +128,120 @@ paths:
       responses:
         '200':
           description: Success
-
-  /api/tips/v1/pay/profile/dcintegration:
+  /api/tips/v1/pay/failedMmr:
+    get:
+      tags:
+        - Pay
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+            nullable: true
+        - name: issuer_id
+          in: query
+          schema:
+            type: string
+            format: uuid
+        - name: payment_info
+          in: query
+          schema:
+            type: string
+            nullable: true
+      responses:
+        '200':
+          description: Success
+  /api/tips/v1/pay/startApplePaySession:
     post:
       tags:
-        - PayProfile
+        - Pay
       requestBody:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/PayDcTipsProfileRequestModel'
+              $ref: '#/components/schemas/StartApplePaySessionRequest'
           text/json:
             schema:
-              $ref: '#/components/schemas/PayDcTipsProfileRequestModel'
+              $ref: '#/components/schemas/StartApplePaySessionRequest'
           application/*+json:
             schema:
-              $ref: '#/components/schemas/PayDcTipsProfileRequestModel'
+              $ref: '#/components/schemas/StartApplePaySessionRequest'
+      responses:
+        '200':
+          description: Success
+          content:
+            text/plain:
+              schema:
+                type: string
+            application/json:
+              schema:
+                type: string
+            text/json:
+              schema:
+                type: string
+  
+  /api/tips/v1/pay/sendReview:
+    post:
+      tags:
+        - Pay
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SendReviewRequest'
+          text/json:
+            schema:
+              $ref: '#/components/schemas/SendReviewRequest'
+          application/*+json:
+            schema:
+              $ref: '#/components/schemas/SendReviewRequest'
+      responses:
+        '200':
+          description: Success
+  /api/tips/v1/pay/profile:
+    get:
+      tags:
+        - PayProfile
+      summary: Получение профиля на оплату
+      parameters:
+        - name: id
+          in: query
+          description: Id пользователя
+          schema:
+            type: integer
+            description: Id пользователя
+            format: int64
+        - name: orgId
+          in: query
+          description: Id организации если есть
+          schema:
+            type: integer
+            description: Id организации если есть
+            format: int64
+            nullable: true
+        - name: orderId
+          in: query
+          schema:
+            type: string
+            nullable: true
+        - name: checkinType
+          in: query
+          schema:
+            $ref: '#/components/schemas/CheckinType'
+        - name: orderSum
+          in: query
+          schema:
+            type: number
+            format: double
+            nullable: true
+        - name: ClientId
+          in: header
+          description: Генерируется на клиенте (вебке) и прихраниваниется
+          schema:
+            type: string
+            description: Генерируется на клиенте (вебке) и прихраниваниется
+            format: uuid
+            nullable: true
       responses:
         '200':
           description: Success
@@ -88,10 +255,43 @@ paths:
             text/json:
               schema:
                 $ref: '#/components/schemas/PayStartData'
-
+  /api/tips/v1/pay/profile/iiko/{code}:
+    get:
+      tags:
+        - PayProfile
+      summary: Получения профиля на оплату по коду с QR на пречеке iiko
+      parameters:
+        - name: code
+          in: path
+          description: ''
+          required: true
+          schema:
+            type: string
+            description: ''
+            nullable: true
+        - name: ClientId
+          in: header
+          description: ''
+          schema:
+            type: string
+            description: ''
+            format: uuid
+            nullable: true
+      responses:
+        '200':
+          description: Success
+          content:
+            text/plain:
+              schema:
+                $ref: '#/components/schemas/PayStartData'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PayStartData'
+            text/json:
+              schema:
+                $ref: '#/components/schemas/PayStartData'
 components:
   schemas:
-    
     PaymentType:
       enum:
         - 0
@@ -99,47 +299,118 @@ components:
         - 2
       type: integer
       format: int32
-    
-    PayDcTipsRequestModel:
+    PayTipRequestByCodeModel:
       type: object
       properties:
-        userId:
-          type: integer
-          format: int64
+        objectCode:
+          type: string
           nullable: true
-        organizationId:
-          type: string
-          format: uuid
-        orderId:
-          type: string
-          format: uuid
-        code:
-          $ref: '#/components/schemas/PaymentType'
         sum:
           type: integer
           format: int64
-        encryptedData:
-          type: string
-          nullable: true
+        code:
+          $ref: '#/components/schemas/PaymentType'
         comment:
           type: string
           nullable: true
+        rating:
+          type: integer
+          format: int32
+        encryptedData:
+          type: string
+          nullable: true
       additionalProperties: false
-    
-    PayDcTipsProfileRequestModel:
+    ExecutionState:
+      enum:
+        - 0
+        - 1
+        - 2
+      type: integer
+      format: int32
+    TipsPayResponse:
       type: object
       properties:
-        userId:
+        state:
+          $ref: '#/components/schemas/ExecutionState'
+        localizedErrorMessage:
           type: string
-          format: uuid
-        organizationId:
+          nullable: true
+        authUrl:
           type: string
-          format: uuid
-        orderId:
+          nullable: true
+        paymentObjectUid:
           type: string
           format: uuid
       additionalProperties: false
-    
+    WaiterPaymentOperationInfo:
+      type: object
+      properties:
+        waiterId:
+          type: integer
+          format: int64
+        sum:
+          type: number
+          format: double
+        commission:
+          type: number
+          format: double
+        comment:
+          type: string
+          nullable: true
+        rating:
+          type: integer
+          format: int32
+          nullable: true
+        success:
+          type: boolean
+          readOnly: true
+        name:
+          type: string
+          nullable: true
+        photo:
+          type: string
+          nullable: true
+        orgId:
+          type: integer
+          format: int64
+          nullable: true
+        paymentType:
+          $ref: '#/components/schemas/PaymentType'
+      additionalProperties: false
+    StartApplePaySessionRequest:
+      type: object
+      properties:
+        uri:
+          type: string
+          nullable: true
+        objectCode:
+          type: string
+          nullable: true
+      additionalProperties: false
+    SendReviewRequest:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        comment:
+          type: string
+          nullable: true
+        rating:
+          type: integer
+          format: int32
+          nullable: true
+      additionalProperties: false
+    CheckinType:
+      enum:
+        - 0
+        - 1
+        - 2
+        - 3
+        - 4
+        - 5
+      type: integer
+      format: int32
     PayStartData:
       type: object
       properties:
@@ -171,48 +442,3 @@ components:
             format: int32
           nullable: true
       additionalProperties: false
-
-    ExecutionState:
-      enum:
-        - 0
-        - 1
-        - 2
-      type: integer
-      format: int32
-
-    TipsPayResponse:
-      type: object
-      properties:
-        state:
-          $ref: '#/components/schemas/ExecutionState'
-        localizedErrorMessage:
-          type: string
-          nullable: true
-        authUrl:
-          type: string
-          nullable: true
-        paymentObjectUid:
-          type: string
-          format: uuid
-      additionalProperties: false
-
-    Phone:
-      type: object
-      additionalProperties: false
-
-    QrPrechequeIntegrationRequest:
-      type: object
-      properties:
-        systemType:
-          type: integer
-          format: int32
-        contact:
-          type: string
-          nullable: true
-        phone:
-          $ref: '#/components/schemas/Phone'
-        email:
-          type: string
-          nullable: true
-      additionalProperties: false
-      
